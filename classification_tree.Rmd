@@ -1,0 +1,147 @@
+---
+title: "Classification Tree"
+author: "Abhishek Kumar"
+date: "3/14/2021"
+output: html_document
+---
+
+
+# Decision Tree
+
+_Decision tree is a type of supervised learning algorithm (having a predefined target variable) that is mostly used in classification problems. It works for both categorical and continuous input and output variables. In this technique, we split the population or sample into two or more homogeneous sets (or sub-populations) based on most significant splitter / differentiator in input variables._
+
+
+__Setting Working Directory__
+```{r}
+path = "G:\\My Drive\\spring_semester\\statistical_ml\\section5"
+setwd(path)
+```
+
+> rpart() function in the rpart package of ra can be used to perform the classification trees.
+
+```{r library}
+library(rpart)
+library(partykit) # Provides nicer plotting capabilities to represent trees.
+```
+
+
+__Function to plot classification tree__
+```{r plot}
+
+tree_plot = function(ct, ...){
+  
+  plot(ct, margin = 0.1)
+  text(ct, use.n = TRUE, # add labels
+     col = "darkorange2")
+  plot(as.party(ct), ...)
+  
+}
+
+```
+
+
+
+```{r data_simulation1}
+
+set.seed(127799)
+n1 = 30
+n2 = 30
+x = c( rnorm(n1, -0.8, 1.2), rnorm(n2, 2.8, 1.2) )
+y = factor( rep(0:1, c(n1, n2)) )
+
+# fitting and plotting of classification tree
+
+ct = rpart(y ~x)
+ct
+tree_plot(ct)
+
+```
+__*In the output we get:*__
+> I used the classification tree to observe the classiffication of input variable x into classes of y belonging to 0 and 1.
+> The optimal split, the value of x. So in this the value of tau is 1.21
+> Then we get the classification over the two different splits.
+> We also obtain the probability of observing a certain outcome of target variable y
+  1. For example, for x<1.21, there is a very high probability (0.93) of observing an observation wit y = 0.
+  2. Whereas in the other direction of the split, i.e for x>= 1.21, there is larger probability(0.96) of observing an outcome with
+     y = 1.
+     
+__*Plotting*__
+
+> Same can be observed from the plots which shows that for x < 1.21, 29 observations belonged to class 0 and 2 belonged to class 1, whereas for the x>= 1.21  28 values were observed in class 1  and only 1 in class 0.
+> So it can be said from the observation that if we observe an input x with values less that 1.21 then it very likely that these observations belong to class 0 whereas observations having input x >= 1.21 has higher probability of belonging to class of 1.
+
+
+```{r data_simulation2}
+
+# generating simulated data
+
+set.seed(894471) # To reproduce the example
+n1 = 15
+n2 = 15
+n3 = 30
+
+x = c( rnorm(n1, -0.8, 0.9), rnorm(n2, 5.5, 0.9), rnorm(n3, 2.8, 0.8))
+y = factor( rep(0:1, c(n1+n2, n3)))
+
+ct = rpart(y ~ x)
+ct
+tree_plot(ct)
+```
+
+__*In this case from the output : *__
+> I can see that we get an extended collection of decisions, infact we get two splits, Split corresponding to value of x > 4.4 and split corresponding to value of x 0.588.
+> For observation with x < 4.4 we have observations belonging to class 0 only, but for the values greater that 4.4 the probabilily distribution of each class is more uniform ampng classes although class 1 has higher probabiliy. Its moore uncertain to predict the classof an observation in this region, so a further decision to split the region at x = 0.589 is introduced.
+> It can be observed that for observation values less than 0.589, it is almost certain that it wil belong to class 0.And for obseravations between x>0.589 and x < 4.4 the observations are most likely to belong to class 1.
+
+
+__Developing classification tree on titanic dataset to classify whether or not a passenge survived*__
+
+```{r titanic}
+
+# lOading the titanic dataset
+titanic = read.csv("data_titanic.csv")
+
+# Inspecting the dataset
+str(titanic)
+head(titanic)
+#View(titanic)
+
+
+# Fitting and plotting the classification tree
+
+ct =  rpart(Survived ~ ., data = titanic)
+ct
+tree_plot(ct, cex = 0.5)
+
+```
+
+>In this setting the target variable is whether or not the passenger survived.
+
+The root node identified is the gender of the passenger. Then the split is made on the two possible categories *male* and *female*
+1. Within the category *male* of variable sex, onather split is consider based on the __*age*__ of passenge i.e *adult* or *child*.
+  1.1. If the passenger is male and adult then the probability of survival is very very less around 20%.
+  1.2. In case the passenger is *male* and belong to age group of *child* then we need another split minimmize the impurity of the    classification, based on the class of ticket the male child was travelling. 
+    2.1.1. if male child was travelling with 3rd class class ticket then likelihood of survival is very less(around 20%).
+    2.1.2. if they belonged to 1st or 2nd class then the chances of survival is around 100%.
+2. If the passenger was *female*, then the most sutable variable to split data further is class.
+  2.1. if the female passenger belonged to 3rd class, then there is about 50% chance of survival of the passenger.
+  2.2. There is approximately 93% chance of survival if the female passenger belonged to the 1st, 2nd or crew class.
+    
+    
+__*Multiple Classes classification tree*__
+
+> I will apply classification tree to classify the type of vehicle.
+
+```{r vehicle}
+
+# Vehicle data example
+library(mlbench)
+data("Vehicle")
+str(Vehicle) # 846 observations and 19 variables
+
+ct = rpart(Class ~ ., data = Vehicle)
+tree_plot(ct, gp = gpar(fontsize = 6) ) # gpar and fontsize is used to re-scale the plot
+
+```
+
+> From the plot I can see that *Elong* variable is identified as the root node and is the most important node for classification problem.
